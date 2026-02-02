@@ -9,7 +9,16 @@ sources.
 gutenberg-dl "https://projekt-gutenberg.org/authors/thomas-mann/books/achtzehn-erzaehlungen/"
 gutenberg-dl "https://www.gutenberg.org/ebooks/77830"
 gutenberg-dl --no-images "https://www.gutenberg.org/ebooks/77830"
+gutenberg-dl --debug "https://projekt-gutenberg.org/authors/thomas-mann/books/achtzehn-erzaehlungen/"
 ```
+
+## Options
+
+- `--no-images`: Skip image downloads. For Project Gutenberg URLs this switches to
+  `.epub3` without images.
+- `--debug`: Save debug HTML output for Projekt Gutenberg sources. Writes raw chapter
+  HTML and extracted content under `./gutenberg-dl-debug/<slug>/` (or under `--out` if
+  it is a directory).
 
 ## Hinweis zu den Inhalten (Projekt Gutenberg)
 
