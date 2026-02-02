@@ -101,6 +101,15 @@ def fetch_book(
             )
         )
 
+    if debug_dir and images:
+        images_dir = os.path.join(debug_dir, "images")
+        os.makedirs(images_dir, exist_ok=True)
+        for asset in images.values():
+            image_path = os.path.join(debug_dir, asset.file_name)
+            os.makedirs(os.path.dirname(image_path), exist_ok=True)
+            with open(image_path, "wb") as handle:
+                handle.write(asset.content)
+
     return Book(
         title=title,
         author=author,
@@ -174,10 +183,9 @@ def _rewrite_images(
     used_names: set[str],
 ) -> None:
     for img in content.find_all("img"):
-        src = _attr_str(img, "src")
-        if not src:
+        image_url = _select_image_url(img, base_url)
+        if not image_url:
             continue
-        image_url = urljoin(base_url, src)
         asset = images.get(image_url)
         if asset is None:
             fetched = fetch_bytes(image_url)
@@ -196,7 +204,59 @@ def _rewrite_images(
             )
             images[image_url] = asset
         img["src"] = asset.file_name
-        img.attrs.pop("srcset", None)
+        for attr in (
+            "srcset",
+            "data-srcset",
+            "data-lazy-srcset",
+            "data-src",
+            "data-lazy-src",
+            "data-original",
+        ):
+            img.attrs.pop(attr, None)
+    for noscript in content.find_all("noscript"):
+        noscript.decompose()
+
+
+def _select_image_url(img: Tag, base_url: str) -> str | None:
+    for attr in (
+        "data-lazy-src",
+        "data-src",
+        "data-original",
+        "data-lazy-srcset",
+        "data-srcset",
+        "srcset",
+        "src",
+    ):
+        value = _attr_str(img, attr)
+        if not value:
+            continue
+        if attr.endswith("srcset"):
+            value = _first_src_from_srcset(value)
+            if not value:
+                continue
+        if attr == "src" and value.startswith("data:"):
+            continue
+        return urljoin(base_url, value)
+
+    sibling = img.next_sibling
+    while sibling is not None:
+        if isinstance(sibling, Tag) and sibling.name == "noscript":
+            fallback = sibling.find("img")
+            if fallback is not None:
+                value = _attr_str(fallback, "src")
+                if value:
+                    return urljoin(base_url, value)
+            break
+        sibling = sibling.next_sibling
+    return None
+
+
+def _first_src_from_srcset(srcset: str) -> str | None:
+    parts = [part.strip() for part in srcset.split(",") if part.strip()]
+    if not parts:
+        return None
+    first = parts[0].split()
+    return first[0] if first else None
 
 
 def _media_type_from_response(content_type: str | None, url: str) -> str:
