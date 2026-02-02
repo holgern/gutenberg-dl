@@ -6,15 +6,14 @@ import re
 import unicodedata
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional
 from urllib.parse import urlparse
 
 
 @dataclass(frozen=True)
 class EpubMetadata:
-    title: Optional[str]
-    author: Optional[str]
-    language: Optional[str]
+    title: str | None
+    author: str | None
+    language: str | None
 
 
 def slugify(value: str) -> str:
@@ -25,7 +24,7 @@ def slugify(value: str) -> str:
     return ascii_value or "book"
 
 
-def make_book_filename(author: Optional[str], title: Optional[str]) -> str:
+def make_book_filename(author: str | None, title: str | None) -> str:
     parts = [part for part in [author, title] if part]
     if not parts:
         return "gutenberg-book.epub"
@@ -33,7 +32,7 @@ def make_book_filename(author: Optional[str], title: Optional[str]) -> str:
     return f"{slugify(base)}.epub"
 
 
-def resolve_output_path(out_path: Optional[str], default_name: str) -> str:
+def resolve_output_path(out_path: str | None, default_name: str) -> str:
     if not out_path:
         return default_name
     if out_path.endswith(os.sep):
@@ -63,7 +62,7 @@ def unique_filename(filename: str, used: set[str]) -> str:
         index += 1
 
 
-def guess_extension(url: str, media_type: Optional[str]) -> str:
+def guess_extension(url: str, media_type: str | None) -> str:
     if media_type:
         guessed = mimetypes.guess_extension(media_type.split(";")[0].strip())
         if guessed:
@@ -73,14 +72,14 @@ def guess_extension(url: str, media_type: Optional[str]) -> str:
     return ext or ".bin"
 
 
-def clean_text(value: Optional[str]) -> Optional[str]:
+def clean_text(value: str | None) -> str | None:
     if value is None:
         return None
     cleaned = re.sub(r"\s+", " ", value).strip()
     return cleaned or None
 
 
-def first_text(values: Iterable[Optional[str]]) -> Optional[str]:
+def first_text(values: Iterable[str | None]) -> str | None:
     for value in values:
         if value:
             return value

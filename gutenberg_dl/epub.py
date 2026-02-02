@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import html
-from typing import List
 
 from ebooklib import epub
 
@@ -57,11 +56,11 @@ def wrap_chapter_html(title: str, body_html: str, language: str) -> str:
 
 def _add_chapters(
     epub_book: epub.EpubBook,
-    chapters: List[Chapter],
+    chapters: list[Chapter],
     language: str,
     style_item: epub.EpubItem,
-) -> List[epub.EpubHtml]:
-    items: List[epub.EpubHtml] = []
+) -> list[epub.EpubHtml]:
+    items: list[epub.EpubHtml] = []
     for chapter in chapters:
         item = epub.EpubHtml(
             title=chapter.title, file_name=chapter.file_name, lang=language

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import ssl
 from dataclasses import dataclass
-from typing import Optional
 from urllib.request import Request, urlopen
 
 DEFAULT_USER_AGENT = "gutenberg-dl/0.1 (+https://github.com/holgern/gutenberg-dl)"
@@ -12,7 +11,7 @@ DEFAULT_USER_AGENT = "gutenberg-dl/0.1 (+https://github.com/holgern/gutenberg-dl
 class FetchResult:
     content: bytes
     final_url: str
-    content_type: Optional[str]
+    content_type: str | None
 
 
 def fetch_bytes(url: str, timeout: int = 30) -> FetchResult:

@@ -4,7 +4,7 @@ import hashlib
 import mimetypes
 import os
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -18,14 +18,14 @@ from ..utils import clean_text, guess_extension, slugify, unique_filename
 @dataclass(frozen=True)
 class ChapterRef:
     url: str
-    title: Optional[str]
+    title: str | None
 
 
 def fetch_book(
     url: str,
     no_images: bool,
     log: Callable[[str], None],
-    debug_dir: Optional[str] = None,
+    debug_dir: str | None = None,
 ) -> Book:
     page = fetch_bytes(url)
     if debug_dir:
@@ -50,15 +50,16 @@ def fetch_book(
     if book_reader:
         identifier = _attr_str(book_reader, "data-gutenberg-book-id")
     if not identifier:
-        identifier = f"projekt-gutenberg:{hashlib.sha1(page.final_url.encode('utf-8')).hexdigest()}"
+        digest = hashlib.sha1(page.final_url.encode("utf-8")).hexdigest()
+        identifier = f"projekt-gutenberg:{digest}"
 
     chapter_refs = _parse_chapter_refs(soup, page.final_url)
     if not chapter_refs:
         raise ValueError("No chapters found on Projekt Gutenberg page.")
 
-    images: Dict[str, ImageAsset] = {}
+    images: dict[str, ImageAsset] = {}
     used_names: set[str] = set()
-    chapters: List[Chapter] = []
+    chapters: list[Chapter] = []
 
     for index, ref in enumerate(chapter_refs, start=1):
         log(f"Downloading chapter {index}/{len(chapter_refs)}")
@@ -112,8 +113,8 @@ def fetch_book(
     )
 
 
-def _parse_chapter_refs(soup: BeautifulSoup, base_url: str) -> List[ChapterRef]:
-    refs: List[ChapterRef] = []
+def _parse_chapter_refs(soup: BeautifulSoup, base_url: str) -> list[ChapterRef]:
+    refs: list[ChapterRef] = []
     for link in soup.select(".book-reader__chapter-list a"):
         href = _attr_str(link, "href")
         if not href:
@@ -142,9 +143,9 @@ def _parse_chapter_content(
     html: bytes,
     base_url: str,
     no_images: bool,
-    images: Dict[str, ImageAsset],
+    images: dict[str, ImageAsset],
     used_names: set[str],
-) -> tuple[Optional[str], str]:
+) -> tuple[str | None, str]:
     soup = BeautifulSoup(html, "html.parser")
     title = clean_text(_get_text(soup.select_one(".book-reader__chapter-heading")))
     content = soup.select_one(".book-reader__chapter-content-wrapper")
@@ -169,7 +170,7 @@ def _parse_chapter_content(
 def _rewrite_images(
     content: Tag,
     base_url: str,
-    images: Dict[str, ImageAsset],
+    images: dict[str, ImageAsset],
     used_names: set[str],
 ) -> None:
     for img in content.find_all("img"):
@@ -198,20 +199,20 @@ def _rewrite_images(
         img.attrs.pop("srcset", None)
 
 
-def _media_type_from_response(content_type: Optional[str], url: str) -> str:
+def _media_type_from_response(content_type: str | None, url: str) -> str:
     if content_type:
         return content_type.split(";")[0].strip()
     guessed, _ = mimetypes.guess_type(url)
     return guessed or "application/octet-stream"
 
 
-def _get_text(node: Optional[Tag]) -> Optional[str]:
+def _get_text(node: Tag | None) -> str | None:
     if node is None:
         return None
     return node.get_text()
 
 
-def _attr_str(node: Optional[Tag], attr: str) -> Optional[str]:
+def _attr_str(node: Tag | None, attr: str) -> str | None:
     if node is None:
         return None
     value = node.get(attr)

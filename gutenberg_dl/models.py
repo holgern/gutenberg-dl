@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 
 @dataclass(frozen=True)
@@ -25,7 +24,7 @@ class Book:
     author: str
     language: str
     identifier: str
-    description: Optional[str]
+    description: str | None
     source_url: str
-    chapters: List[Chapter]
-    images: List[ImageAsset]
+    chapters: list[Chapter]
+    images: list[ImageAsset]

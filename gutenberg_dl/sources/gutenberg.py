@@ -5,8 +5,9 @@ import shutil
 import tempfile
 import zipfile
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable
 from urllib.parse import urlparse
+from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
@@ -27,7 +28,7 @@ class DownloadResult:
 
 def download_epub(
     url: str,
-    out_path: Optional[str],
+    out_path: str | None,
     no_images: bool,
     log: Callable[[str], None],
 ) -> DownloadResult:
@@ -61,7 +62,9 @@ def derive_download_url(url: str, no_images: bool) -> str:
         raise ValueError("Could not determine Project Gutenberg ebook id from URL.")
 
     book_id = match.group(1)
-    base = f"{parsed.scheme or 'https'}://{parsed.netloc or 'www.gutenberg.org'}/ebooks/{book_id}"
+    scheme = parsed.scheme or "https"
+    netloc = parsed.netloc or "www.gutenberg.org"
+    base = f"{scheme}://{netloc}/ebooks/{book_id}"
     suffix = ".epub3" if no_images else ".epub3.images"
     return f"{base}{suffix}"
 
@@ -89,7 +92,7 @@ def read_epub_metadata(path: str) -> EpubMetadata:
     return EpubMetadata(title=title, author=author, language=language)
 
 
-def _find_text(root: ElementTree.Element, local_name: str) -> Optional[str]:
+def _find_text(root: Element, local_name: str) -> str | None:
     for node in root.iter():
         if node.tag.endswith(f"}}{local_name}") or node.tag == local_name:
             if node.text:

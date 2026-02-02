@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from typing import Optional
 from urllib.parse import urlparse
 
 import click
@@ -53,7 +52,7 @@ def _logger(quiet: bool):
 @click.option("--debug", is_flag=True, default=False, help="Save debug HTML output.")
 def main(
     url: str,
-    out_path: Optional[str],
+    out_path: str | None,
     source: str,
     no_images: bool,
     quiet: bool,
