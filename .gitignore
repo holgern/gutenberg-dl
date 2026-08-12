@@ -205,7 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-context_gutenberg_dl.md
-gutenberg_dl/__version__.py
+context_gutenberg_dl.*
+gutenberg_dl/_version.py
 *.epub
 gutenberg-dl-debug/
